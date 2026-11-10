@@ -3261,7 +3261,7 @@ def request_review(
     metadata: Optional[dict] = None, reviewer: Optional[str] = None,
     expected_run_id: Optional[int] = None, force: bool = False, with_reason: bool = False,
 ):
-    """``running``/``ready`` -> ``review``; never touches block recurrence accounting.
+    """``running``/``ready`` -> ``review``; never touches block recurrence accounting or ``consecutive_failures``; clears the stale ``last_failure_error`` (a rate-limit stamp would park the review lane on ``blocker_auth``).
 
     Implementer and reviewer are recorded on the event so requested changes
     route back to the right profile; ``reviewer`` reassigns the task, and on
@@ -3349,7 +3349,7 @@ def request_review(
                    SET status        = 'review',
                        claim_lock    = NULL,
                        claim_expires = NULL,
-                       worker_pid    = NULL
+                       worker_pid    = NULL, last_failure_error = NULL
                 """ + assignee_sql + """
                  WHERE id = ?
                    AND status IN ('running', 'ready')
